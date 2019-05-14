@@ -6,6 +6,18 @@ import seaborn as sns
 
 import warnings
 
+from sklearn.model_selection import StratifiedShuffleSplit
+from sklearn.metrics import accuracy_score, log_loss
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier, GradientBoostingClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis, QuadraticDiscriminantAnalysis
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+
+
 
 def clas(train, test):
     sns.barplot(x="Pclass", y="Survived", data=train)
@@ -86,9 +98,70 @@ def prepareData(train, test):
 
     return train, test
 
-    
+def classifier(train, test):
+    classifiers = [
+        KNeighborsClassifier(3),
+        SVC(probability=True),
+        DecisionTreeClassifier(),
+        RandomForestClassifier(),
+	    AdaBoostClassifier(),
+        GradientBoostingClassifier(),
+        GaussianNB(),
+        LinearDiscriminantAnalysis(),
+        QuadraticDiscriminantAnalysis(),
+        LogisticRegression()]
 
-   
+    log_cols = ["Classifier", "Accuracy"]
+    log 	 = pd.DataFrame(columns=log_cols)
+
+    acc_dict = []
+
+    predictors = train.drop(['Survived'], axis=1)
+    target = train["Survived"]
+    x_train, x_val, y_train, y_val = train_test_split(predictors, target, test_size = 0.22, random_state = 0)
+
+    for clf in classifiers:
+        name = clf.__class__.__name__
+        clf.fit(x_train, y_train)
+        train_predictions = clf.predict(x_val)
+        acc = accuracy_score(y_val, train_predictions)
+        acc_dict.append([name, acc])
+
+    for clf in acc_dict:
+        log_entry = pd.DataFrame([[clf[0], clf[1]]], columns=log_cols)
+        log = log.append(log_entry)
+    
+    for ac in acc_dict:
+        print(ac[0])
+
+    plt.xlabel('Accuracy')
+    plt.title('Classifier Accuracy')
+    sns.set_color_codes("muted")
+    sns.barplot(x='Accuracy', y='Classifier', data=log, color="b")
+    plt.show()
+
+def quadratic(train, test):
+    passagers = test['Name'].head(10)
+    survival = []
+
+    train, test = prepareData(train,test)
+    features = ['Pclass',  'Sex',  'SibSp',  'Parch',  'Fare',  'AgeGroup']
+    y = train['Survived']
+    X = train[features]
+    quadra = QuadraticDiscriminantAnalysis()
+    quadra.fit(X,y)
+    tab = quadra.predict(test.head(10))
+
+    for i in range(len(passagers)):
+        if(tab[i] == 1):
+            survival.append(passagers[i] + ": Przezyl")
+        else:
+            survival.append(passagers[i] + ": Nieprzezyl")
+    
+    for i in survival:
+        print(i)
+        
+        
 
 
 
